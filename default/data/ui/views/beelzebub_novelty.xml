@@ -32,6 +32,8 @@
 | eval _latest   = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$","^-?\d+(\.\d+)?$"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | stats count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
         </search>
         <option name="rangeColors">["0x53a051","0xf1813f","0xdc4e41"]</option>
         <option name="ranges">[0,1,10]</option>
@@ -46,6 +48,8 @@
 | eval _latest   = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$","^-?\d+(\.\d+)?$"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | stats count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
         </search>
       </single>
     </panel>
@@ -58,6 +62,8 @@
 | eval _latest   = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$","^-?\d+(\.\d+)?$"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | stats count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
         </search>
       </single>
     </panel>
@@ -70,6 +76,8 @@
 | eval _latest   = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$","^-?\d+(\.\d+)?$"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | stats count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
         </search>
       </single>
     </panel>
@@ -88,6 +96,8 @@
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
 | table src_ip, first_seen, events, protocols
 | sort -events</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
         </search>
         <option name="count">15</option>
       </table>
@@ -107,6 +117,8 @@
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
 | table username, password, first_seen, events, sample_src_ip
 | sort -events</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
         </search>
         <option name="count">10</option>
       </table>
@@ -122,6 +134,8 @@
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
 | table client, first_seen, events, sample_src_ip
 | sort -events</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
         </search>
         <option name="count">10</option>
       </table>
@@ -142,6 +156,8 @@
 | rename http_method AS method, uri_path AS uri
 | table method, uri, first_seen, events, sample_src_ip
 | sort -events</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
         </search>
         <option name="count">10</option>
         <option name="wrap">true</option>
@@ -159,6 +175,8 @@
 | rename http_user_agent AS user_agent
 | table user_agent, first_seen, events, sample_src_ip
 | sort -events</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
         </search>
         <option name="count">10</option>
       </table>
@@ -178,6 +196,8 @@
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
 | table command, first_seen, events, sample_src_ip
 | sort -events</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
         </search>
         <option name="count">10</option>
         <option name="wrap">true</option>
