@@ -1,6 +1,6 @@
 # SA-beelzebub — Beelzebub Honeypot Dashboards and Alerts
 
-Splunk Supporting Add-on providing dashboards and saved searches for the Beelzebub honeypot. Requires TA-beelzebub to be deployed on all indexers and search heads.
+Splunk Supporting Add-on providing dashboards and saved searches for the Beelzebub honeypot. Requires [TA-beelzebub](https://github.com/neokjames/TA-beelzebub) to be deployed on all indexers and search heads.
 
 ## What's included
 
