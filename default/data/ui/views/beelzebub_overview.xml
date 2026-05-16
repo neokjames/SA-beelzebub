@@ -1,0 +1,301 @@
+<dashboard version="1.1">
+  <label>Beelzebub Honeypot Overview</label>
+
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="time_range" searchWhenChanged="true">
+      <label>Time Range</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="protocol_filter" searchWhenChanged="true">
+      <label>Protocol</label>
+      <choice value="*">All</choice>
+      <choice value="SSH">SSH</choice>
+      <choice value="HTTP">HTTP</choice>
+      <choice value="TCP">TCP</choice>
+      <choice value="TELNET">TELNET</choice>
+      <choice value="MCP">MCP</choice>
+      <default>*</default>
+    </input>
+  </fieldset>
+
+  <!-- ── Row 1: KPIs ─────────────────────────────────────────────────────── -->
+  <row>
+    <panel>
+      <single>
+        <title>Total Interactions</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=$protocol_filter$ | stats count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Unique Attacker IPs</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=$protocol_filter$ | stats dc(src_ip) AS ips</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Interactive Sessions</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=$protocol_filter$ vendor_action=Interaction | stats dc(src_ip) AS sessions</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="rangeColors">["0x53a051","0xf1813f","0xdc4e41"]</option>
+        <option name="ranges">[0,1,10]</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>LLM Rate Limit Events</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="Rate limit exceeded" | stats count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="rangeColors">["0x53a051","0xf1813f","0xdc4e41"]</option>
+        <option name="ranges">[0,10,100]</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Unique Credentials Tried</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=$protocol_filter$ user=* | stats dc(password) AS creds</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </single>
+    </panel>
+  </row>
+
+  <!-- ── Row 2: Timeline ─────────────────────────────────────────────────── -->
+  <row>
+    <panel>
+      <chart>
+        <title>Attack Volume Over Time by Protocol</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=$protocol_filter$ | timechart span=1h count BY transport</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+      </chart>
+    </panel>
+  </row>
+
+  <!-- ── Row 3: Attacker IPs + Protocol + SSH clients ───────────────────── -->
+  <row>
+    <panel>
+      <table>
+        <title>Top 15 Attacker IPs</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=$protocol_filter$ | stats count AS events, dc(transport) AS protocol_count, values(transport) AS protocols BY src_ip | sort -events | head 15</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">15</option>
+      </table>
+    </panel>
+    <panel>
+      <chart>
+        <title>Protocol Breakdown</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=$protocol_filter$ | stats count BY transport | sort -count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+      </chart>
+    </panel>
+    <panel>
+      <table>
+        <title>SSH Client Fingerprints</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" (transport=SSH OR transport=TELNET) event.Client=* NOT event.Client="" | stats count AS events, dc(src_ip) AS unique_ips BY event.Client | sort -events | rename event.Client AS client</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">10</option>
+      </table>
+    </panel>
+  </row>
+
+  <!-- ── Row 4: Geographic Distribution ────────────────────────────────── -->
+  <row>
+    <panel>
+      <map>
+        <title>Attacker Origin Map</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=$protocol_filter$ src_ip=*
+| iplocation src_ip
+| geostats latfield=lat longfield=lon count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="mapping.type">marker</option>
+        <option name="mapping.map.zoom">2</option>
+        <option name="mapping.map.center">(0,0)</option>
+        <option name="mapping.markerLayer.markerOpacity">0.8</option>
+        <option name="mapping.markerLayer.markerMinSize">10</option>
+        <option name="mapping.markerLayer.markerMaxSize">50</option>
+      </map>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <table>
+        <title>Top Countries</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=$protocol_filter$ src_ip=*
+| iplocation src_ip
+| stats count AS events, dc(src_ip) AS unique_ips BY Country
+| sort -events
+| head 15</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">15</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Top Cities</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=$protocol_filter$ src_ip=*
+| iplocation src_ip
+| stats count AS events, dc(src_ip) AS unique_ips BY City, Region, Country
+| sort -events
+| head 15</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">15</option>
+      </table>
+    </panel>
+  </row>
+
+  <!-- ── Row 5: Credential Analysis ─────────────────────────────────────── -->
+  <row>
+    <panel>
+      <table>
+        <title>Top Username / Password Pairs</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=$protocol_filter$ user=* | stats count BY user, password | sort -count | head 20 | rename user AS username</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">10</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Credential Spray — IPs Trying Multiple Passwords</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" user=* | stats dc(password) AS unique_passwords, dc(user) AS unique_users, count AS attempts BY src_ip | where unique_passwords > 1 | sort -unique_passwords</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">10</option>
+      </table>
+    </panel>
+  </row>
+
+  <!-- ── Row 5: HTTP Attack Surface ─────────────────────────────────────── -->
+  <row>
+    <panel>
+      <table>
+        <title>Top Targeted HTTP URIs</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=HTTP | stats count BY http_method, uri_path | sort -count | head 20 | rename http_method AS method, uri_path AS uri</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">10</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>HTTP User Agents</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=HTTP http_user_agent=* NOT http_user_agent="" | stats count AS events, dc(src_ip) AS unique_ips BY http_user_agent | sort -events | head 15 | rename http_user_agent AS user_agent</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">10</option>
+      </table>
+    </panel>
+  </row>
+
+  <!-- ── Row 6: LLM Rate Limiting ───────────────────────────────────────── -->
+  <row>
+    <panel>
+      <table>
+        <title>LLM Rate Limit — Top Throttled Attackers</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="Rate limit exceeded" | stats count AS rate_limited_commands, dc(command) AS unique_commands BY src_ip | sort -rate_limited_commands</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">10</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>LLM Rate Limit — Top Throttled Commands</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="Rate limit exceeded" command=* NOT command="" | stats count AS blocked, dc(client_ip) AS unique_ips BY command | sort -blocked | head 20</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">10</option>
+      </table>
+    </panel>
+  </row>
+
+  <!-- ── Row 7: Interactive Sessions ────────────────────────────────────── -->
+  <row>
+    <panel>
+      <table>
+        <title>Interactive Session Commands (External Attackers)</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" vendor_action=Interaction command=* NOT command="" | table _time, src_ip, transport, user, command, event.CommandOutput | sort -_time | rename transport AS protocol, event.CommandOutput AS output</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">15</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+
+  <!-- ── Row 8: Recent Events ────────────────────────────────────────────── -->
+  <row>
+    <panel>
+      <table>
+        <title>Recent Interactions</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=$protocol_filter$ | table _time, src_ip, src_port, transport, user, password, vendor_action, signature, event_id | sort -_time | rename transport AS protocol, vendor_action AS status, signature AS description</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">20</option>
+      </table>
+    </panel>
+  </row>
+
+</dashboard>

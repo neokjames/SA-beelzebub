@@ -1,0 +1,251 @@
+<dashboard version="1.1">
+  <label>Beelzebub — Novel Activity Tracker</label>
+  <description>Surfaces attacker IPs, credentials, commands, and HTTP patterns appearing for the first time in the selected window. Uses a NOT subsearch against all prior data to ensure "new" means genuinely first-ever-seen.</description>
+
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="time_range" searchWhenChanged="true">
+      <label>New since</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+
+  <!-- ── Row 1: KPIs ─────────────────────────────────────────────────────── -->
+  <row>
+    <panel>
+      <single>
+        <title>New Attacker IPs</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" src_ip=*
+| stats count BY src_ip
+| search NOT [
+    search `beelzebub_index` sourcetype="beelzebub:json" msg="New Event" earliest=0 latest=$time_range.earliest$ src_ip=*
+    | stats count BY src_ip
+    | fields src_ip ]
+| stats count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="rangeColors">["0x53a051","0xf1813f","0xdc4e41"]</option>
+        <option name="ranges">[0,1,10]</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>New Credential Pairs</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" user=* password=*
+| stats count BY user, password
+| search NOT [
+    search `beelzebub_index` sourcetype="beelzebub:json" msg="New Event" earliest=0 latest=$time_range.earliest$ user=* password=*
+    | stats count BY user, password
+    | fields user, password ]
+| stats count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>New Commands (Interactions)</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" command=* NOT command=""
+| stats count BY command
+| search NOT [
+    search `beelzebub_index` sourcetype="beelzebub:json" msg="New Event" earliest=0 latest=$time_range.earliest$ command=* NOT command=""
+    | stats count BY command
+    | fields command ]
+| stats count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>New Throttled Commands</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="Rate limit exceeded" command=* NOT command=""
+| stats count BY command
+| search NOT [
+    search `beelzebub_index` sourcetype="beelzebub:json" msg="Rate limit exceeded" earliest=0 latest=$time_range.earliest$ command=* NOT command=""
+    | stats count BY command
+    | fields command ]
+| stats count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>New HTTP URIs</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=HTTP uri_path=*
+| stats count BY uri_path
+| search NOT [
+    search `beelzebub_index` sourcetype="beelzebub:json" msg="New Event" earliest=0 latest=$time_range.earliest$ transport=HTTP uri_path=*
+    | stats count BY uri_path
+    | fields uri_path ]
+| stats count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </single>
+    </panel>
+  </row>
+
+  <!-- ── Row 2: New Attacker IPs ────────────────────────────────────────── -->
+  <row>
+    <panel>
+      <table>
+        <title>New Attacker IPs</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" src_ip=*
+| stats earliest(_time) AS first_seen, count AS events, values(transport) AS protocols, dc(transport) AS protocol_count BY src_ip
+| search NOT [
+    search `beelzebub_index` sourcetype="beelzebub:json" msg="New Event" earliest=0 latest=$time_range.earliest$ src_ip=*
+    | stats count BY src_ip
+    | fields src_ip ]
+| eval first_seen=strftime(first_seen, "%Y-%m-%d %H:%M:%S")
+| sort -events</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">15</option>
+      </table>
+    </panel>
+  </row>
+
+  <!-- ── Row 3: New Credentials + New SSH Clients ───────────────────────── -->
+  <row>
+    <panel>
+      <table>
+        <title>New Credential Pairs</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" user=* password=*
+| stats earliest(_time) AS first_seen, count AS events, values(src_ip) AS src_ips BY user, password
+| search NOT [
+    search `beelzebub_index` sourcetype="beelzebub:json" msg="New Event" earliest=0 latest=$time_range.earliest$ user=* password=*
+    | stats count BY user, password
+    | fields user, password ]
+| eval first_seen=strftime(first_seen, "%Y-%m-%d %H:%M:%S")
+| sort -events
+| rename user AS username</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">10</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>New SSH Client Fingerprints</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" (transport=SSH OR transport=TELNET) event.Client=* NOT event.Client=""
+| stats earliest(_time) AS first_seen, count AS events, values(src_ip) AS src_ips BY event.Client
+| search NOT [
+    search `beelzebub_index` sourcetype="beelzebub:json" msg="New Event" earliest=0 latest=$time_range.earliest$ (transport=SSH OR transport=TELNET) event.Client=* NOT event.Client=""
+    | stats count BY event.Client
+    | fields event.Client ]
+| eval first_seen=strftime(first_seen, "%Y-%m-%d %H:%M:%S")
+| sort -events
+| rename event.Client AS client</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">10</option>
+      </table>
+    </panel>
+  </row>
+
+  <!-- ── Row 4: New HTTP Patterns ───────────────────────────────────────── -->
+  <row>
+    <panel>
+      <table>
+        <title>New HTTP URIs</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=HTTP uri_path=*
+| stats earliest(_time) AS first_seen, count AS events, values(src_ip) AS src_ips, values(http_user_agent) AS user_agents BY http_method, uri_path
+| search NOT [
+    search `beelzebub_index` sourcetype="beelzebub:json" msg="New Event" earliest=0 latest=$time_range.earliest$ transport=HTTP uri_path=*
+    | stats count BY uri_path
+    | fields uri_path ]
+| eval first_seen=strftime(first_seen, "%Y-%m-%d %H:%M:%S")
+| sort -events
+| rename http_method AS method, uri_path AS uri</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">10</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>New HTTP User Agents</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" transport=HTTP http_user_agent=* NOT http_user_agent=""
+| stats earliest(_time) AS first_seen, count AS events, values(src_ip) AS src_ips BY http_user_agent
+| search NOT [
+    search `beelzebub_index` sourcetype="beelzebub:json" msg="New Event" earliest=0 latest=$time_range.earliest$ transport=HTTP http_user_agent=* NOT http_user_agent=""
+    | stats count BY http_user_agent
+    | fields http_user_agent ]
+| eval first_seen=strftime(first_seen, "%Y-%m-%d %H:%M:%S")
+| sort -events
+| rename http_user_agent AS user_agent</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">10</option>
+      </table>
+    </panel>
+  </row>
+
+  <!-- ── Row 5: New Commands ─────────────────────────────────────────────── -->
+  <row>
+    <panel>
+      <table>
+        <title>New Interactive Commands (LLM Responded)</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="New Event" command=* NOT command=""
+| stats earliest(_time) AS first_seen, count AS events, values(src_ip) AS src_ips, values(event.CommandOutput) AS outputs BY command
+| search NOT [
+    search `beelzebub_index` sourcetype="beelzebub:json" msg="New Event" earliest=0 latest=$time_range.earliest$ command=* NOT command=""
+    | stats count BY command
+    | fields command ]
+| eval first_seen=strftime(first_seen, "%Y-%m-%d %H:%M:%S")
+| sort -events
+| rename event.CommandOutput AS output</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">10</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>New Throttled Commands (LLM Rate Limited)</title>
+        <search>
+          <query>`beelzebub_index` sourcetype="beelzebub:json" msg="Rate limit exceeded" command=* NOT command=""
+| stats earliest(_time) AS first_seen, count AS events, values(client_ip) AS src_ips BY command
+| search NOT [
+    search `beelzebub_index` sourcetype="beelzebub:json" msg="Rate limit exceeded" earliest=0 latest=$time_range.earliest$ command=* NOT command=""
+    | stats count BY command
+    | fields command ]
+| eval first_seen=strftime(first_seen, "%Y-%m-%d %H:%M:%S")
+| sort -events</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">10</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+
+</dashboard>
