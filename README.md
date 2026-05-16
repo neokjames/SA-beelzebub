@@ -26,7 +26,7 @@ definition = index=<your-index-name>
 
 ## Dashboards
 
-### Beelzebub Honeypot Overview
+### Overview
 
 General-purpose operational view. Filterable by protocol and time range.
 
@@ -46,7 +46,7 @@ General-purpose operational view. Filterable by protocol and time range.
 | Interactive Session Commands | Commands issued in confirmed attacker sessions |
 | Recent Interactions | Latest raw events |
 
-### Beelzebub — Novel Activity Tracker
+### First Seen Tracking
 
 Surfaces entities appearing for the first time by querying per-entity KV store collections (`beelzebub_first_seen_*`) populated hourly by the `Beelzebub - Tracker - *` saved searches. The time picker filters by the stored `first_seen` epoch.
 

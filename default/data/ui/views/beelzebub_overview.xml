@@ -1,5 +1,5 @@
 <dashboard version="1.1">
-  <label>Beelzebub Honeypot Overview</label>
+  <label>Overview</label>
 
   <fieldset submitButton="false" autoRun="true">
     <input type="time" token="time_range" searchWhenChanged="true">
