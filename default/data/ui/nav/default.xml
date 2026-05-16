@@ -1,6 +1,6 @@
 <nav search_view="search" color="#4A90D9">
-  <view name="beelzebub_overview" default="true" />
-  <view name="beelzebub_novelty" />
+  <view name="beelzebub_overview" default="true" label="Overview" />
+  <view name="beelzebub_novelty" label="First Seen Tracking" />
   <view name="search" />
   <view name="reports" />
   <view name="alerts" />
