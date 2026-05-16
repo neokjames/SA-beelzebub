@@ -28,8 +28,8 @@
         <title>New Sources (src_ip + client)</title>
         <search>
           <query>| inputlookup beelzebub_first_seen_source
-| eval _earliest = if(match("$time_range.earliest$", "^\d"), tonumber("$time_range.earliest$"), relative_time(now(), "$time_range.earliest$"))
-| eval _latest = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$", "^\d"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
+| eval _earliest = coalesce(relative_time(now(), "$time_range.earliest$"), 0)
+| eval _latest = if("$time_range.latest$"="now", now(), coalesce(relative_time(now(), "$time_range.latest$"), now()))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | fields - _earliest _latest
 | stats count</query>
@@ -45,8 +45,8 @@
         <title>New Credential Pairs</title>
         <search>
           <query>| inputlookup beelzebub_first_seen_credential
-| eval _earliest = if(match("$time_range.earliest$", "^\d"), tonumber("$time_range.earliest$"), relative_time(now(), "$time_range.earliest$"))
-| eval _latest = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$", "^\d"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
+| eval _earliest = coalesce(relative_time(now(), "$time_range.earliest$"), 0)
+| eval _latest = if("$time_range.latest$"="now", now(), coalesce(relative_time(now(), "$time_range.latest$"), now()))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | fields - _earliest _latest
 | stats count</query>
@@ -60,8 +60,8 @@
         <title>New Commands (Interactions)</title>
         <search>
           <query>| inputlookup beelzebub_first_seen_command
-| eval _earliest = if(match("$time_range.earliest$", "^\d"), tonumber("$time_range.earliest$"), relative_time(now(), "$time_range.earliest$"))
-| eval _latest = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$", "^\d"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
+| eval _earliest = coalesce(relative_time(now(), "$time_range.earliest$"), 0)
+| eval _latest = if("$time_range.latest$"="now", now(), coalesce(relative_time(now(), "$time_range.latest$"), now()))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | fields - _earliest _latest
 | stats count</query>
@@ -75,8 +75,8 @@
         <title>New HTTP URIs</title>
         <search>
           <query>| inputlookup beelzebub_first_seen_uri
-| eval _earliest = if(match("$time_range.earliest$", "^\d"), tonumber("$time_range.earliest$"), relative_time(now(), "$time_range.earliest$"))
-| eval _latest = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$", "^\d"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
+| eval _earliest = coalesce(relative_time(now(), "$time_range.earliest$"), 0)
+| eval _latest = if("$time_range.latest$"="now", now(), coalesce(relative_time(now(), "$time_range.latest$"), now()))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | fields - _earliest _latest
 | stats count</query>
@@ -94,8 +94,8 @@
         <title>New Sources (src_ip + client)</title>
         <search>
           <query>| inputlookup beelzebub_first_seen_source
-| eval _earliest = if(match("$time_range.earliest$", "^\d"), tonumber("$time_range.earliest$"), relative_time(now(), "$time_range.earliest$"))
-| eval _latest = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$", "^\d"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
+| eval _earliest = coalesce(relative_time(now(), "$time_range.earliest$"), 0)
+| eval _latest = if("$time_range.latest$"="now", now(), coalesce(relative_time(now(), "$time_range.latest$"), now()))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | fields - _earliest _latest
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
@@ -118,8 +118,8 @@
         <title>New Credential Pairs</title>
         <search>
           <query>| inputlookup beelzebub_first_seen_credential
-| eval _earliest = if(match("$time_range.earliest$", "^\d"), tonumber("$time_range.earliest$"), relative_time(now(), "$time_range.earliest$"))
-| eval _latest = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$", "^\d"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
+| eval _earliest = coalesce(relative_time(now(), "$time_range.earliest$"), 0)
+| eval _latest = if("$time_range.latest$"="now", now(), coalesce(relative_time(now(), "$time_range.latest$"), now()))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | fields - _earliest _latest
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
@@ -140,8 +140,8 @@
         <title>New HTTP URIs</title>
         <search>
           <query>| inputlookup beelzebub_first_seen_uri
-| eval _earliest = if(match("$time_range.earliest$", "^\d"), tonumber("$time_range.earliest$"), relative_time(now(), "$time_range.earliest$"))
-| eval _latest = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$", "^\d"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
+| eval _earliest = coalesce(relative_time(now(), "$time_range.earliest$"), 0)
+| eval _latest = if("$time_range.latest$"="now", now(), coalesce(relative_time(now(), "$time_range.latest$"), now()))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | fields - _earliest _latest
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
@@ -160,8 +160,8 @@
         <title>New HTTP User Agents</title>
         <search>
           <query>| inputlookup beelzebub_first_seen_user_agent
-| eval _earliest = if(match("$time_range.earliest$", "^\d"), tonumber("$time_range.earliest$"), relative_time(now(), "$time_range.earliest$"))
-| eval _latest = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$", "^\d"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
+| eval _earliest = coalesce(relative_time(now(), "$time_range.earliest$"), 0)
+| eval _latest = if("$time_range.latest$"="now", now(), coalesce(relative_time(now(), "$time_range.latest$"), now()))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | fields - _earliest _latest
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
@@ -183,8 +183,8 @@
         <title>New Interactive Commands (LLM Responded)</title>
         <search>
           <query>| inputlookup beelzebub_first_seen_command
-| eval _earliest = if(match("$time_range.earliest$", "^\d"), tonumber("$time_range.earliest$"), relative_time(now(), "$time_range.earliest$"))
-| eval _latest = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$", "^\d"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
+| eval _earliest = coalesce(relative_time(now(), "$time_range.earliest$"), 0)
+| eval _latest = if("$time_range.latest$"="now", now(), coalesce(relative_time(now(), "$time_range.latest$"), now()))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | fields - _earliest _latest
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
