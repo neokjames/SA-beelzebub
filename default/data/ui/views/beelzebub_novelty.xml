@@ -16,7 +16,7 @@
   <row>
     <panel>
       <html>
-        <p><strong>How this dashboard works:</strong> entities are tracked by hourly scheduled searches (<code>Beelzebub - Tracker - *</code> in savedsearches) and stored in <code>beelzebub_first_seen_*</code> KV store collections. The dashboard is empty until the first tracker run completes (within ~1 hour of install). Once populated, panels show entities whose first-ever sighting falls inside the selected time window.</p>
+        <p><strong>How this dashboard works:</strong> entities are tracked by hourly scheduled searches (<code>Beelzebub - Tracker - *</code> in savedsearches) and stored in <code>beelzebub_first_seen_*</code> KV store collections. The dashboard is empty until the first tracker run completes (within ~1 hour of install). Once populated, panels show entities whose first-ever sighting falls inside the selected time window. Click any row to search raw events.</p>
       </html>
     </panel>
   </row>
@@ -100,13 +100,16 @@
 | fields - _earliest _latest
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
 | eval client = if(client="", "(none)", client)
-| table src_ip, client, first_seen, events, protocols
-| sort -events</query>
+| table src_ip, client, first_seen, protocols
+| sort -first_seen</query>
           <earliest>$time_range.earliest$</earliest>
           <latest>$time_range.latest$</latest>
         </search>
         <option name="count">20</option>
         <option name="wrap">true</option>
+        <drilldown>
+          <link target="_blank">/app/SA-beelzebub/search?q=%60beelzebub_index%60+sourcetype%3D%22beelzebub%3Ajson%22+msg%3D%22New+Event%22+event.SourceIp%3D%22$row.src_ip$%22&amp;earliest=0&amp;latest=now</link>
+        </drilldown>
       </table>
     </panel>
   </row>
@@ -123,12 +126,15 @@
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | fields - _earliest _latest
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
-| table username, password, first_seen, events, sample_src_ip
-| sort -events</query>
+| table username, password, first_seen
+| sort -first_seen</query>
           <earliest>$time_range.earliest$</earliest>
           <latest>$time_range.latest$</latest>
         </search>
         <option name="count">10</option>
+        <drilldown>
+          <link target="_blank">/app/SA-beelzebub/search?q=%60beelzebub_index%60+sourcetype%3D%22beelzebub%3Ajson%22+msg%3D%22New+Event%22+event.User%3D%22$row.username$%22+event.Password%3D%22$row.password$%22&amp;earliest=0&amp;latest=now</link>
+        </drilldown>
       </table>
     </panel>
   </row>
@@ -146,13 +152,16 @@
 | fields - _earliest _latest
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
 | rename http_method AS method, uri_path AS uri
-| table method, uri, first_seen, events, sample_src_ip
-| sort -events</query>
+| table method, uri, first_seen
+| sort -first_seen</query>
           <earliest>$time_range.earliest$</earliest>
           <latest>$time_range.latest$</latest>
         </search>
         <option name="count">10</option>
         <option name="wrap">true</option>
+        <drilldown>
+          <link target="_blank">/app/SA-beelzebub/search?q=%60beelzebub_index%60+sourcetype%3D%22beelzebub%3Ajson%22+msg%3D%22New+Event%22+http_method%3D%22$row.method$%22+uri_path%3D%22$row.uri$%22&amp;earliest=0&amp;latest=now</link>
+        </drilldown>
       </table>
     </panel>
     <panel>
@@ -166,12 +175,15 @@
 | fields - _earliest _latest
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
 | rename http_user_agent AS user_agent
-| table user_agent, first_seen, events, sample_src_ip
-| sort -events</query>
+| table user_agent, first_seen
+| sort -first_seen</query>
           <earliest>$time_range.earliest$</earliest>
           <latest>$time_range.latest$</latest>
         </search>
         <option name="count">10</option>
+        <drilldown>
+          <link target="_blank">/app/SA-beelzebub/search?q=%60beelzebub_index%60+sourcetype%3D%22beelzebub%3Ajson%22+msg%3D%22New+Event%22+http_user_agent%3D%22$row.user_agent$%22&amp;earliest=0&amp;latest=now</link>
+        </drilldown>
       </table>
     </panel>
   </row>
@@ -188,13 +200,16 @@
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
 | fields - _earliest _latest
 | eval first_seen = strftime(first_seen, "%Y-%m-%d %H:%M:%S")
-| table command, first_seen, events, sample_src_ip
-| sort -events</query>
+| table command, first_seen
+| sort -first_seen</query>
           <earliest>$time_range.earliest$</earliest>
           <latest>$time_range.latest$</latest>
         </search>
         <option name="count">10</option>
         <option name="wrap">true</option>
+        <drilldown>
+          <link target="_blank">/app/SA-beelzebub/search?q=%60beelzebub_index%60+sourcetype%3D%22beelzebub%3Ajson%22+msg%3D%22New+Event%22+event.Command%3D%22$row.command$%22&amp;earliest=0&amp;latest=now</link>
+        </drilldown>
       </table>
     </panel>
   </row>
