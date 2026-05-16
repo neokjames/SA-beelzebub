@@ -54,9 +54,8 @@ Surfaces entities appearing for the first time by querying per-entity KV store c
 
 | Panel | Source collection |
 |-------|-------------------|
-| New Attacker IPs | `beelzebub_first_seen_src_ip` |
+| New Endpoints (src_ip + client) | `beelzebub_first_seen_endpoint` |
 | New Credential Pairs | `beelzebub_first_seen_credential` |
-| New SSH Client Fingerprints | `beelzebub_first_seen_client` |
 | New HTTP URIs | `beelzebub_first_seen_uri` |
 | New HTTP User Agents | `beelzebub_first_seen_user_agent` |
 | New Interactive Commands | `beelzebub_first_seen_command` |
@@ -84,16 +83,17 @@ Each tracker scans the previous full hour and inserts any previously-unseen enti
 
 | Tracker | Schedule | Collection |
 |---------|----------|------------|
-| Beelzebub - Tracker - First Seen src_ip | `5 * * * *` | `beelzebub_first_seen_src_ip` |
+| Beelzebub - Tracker - First Seen Endpoint | `5 * * * *` | `beelzebub_first_seen_endpoint` |
 | Beelzebub - Tracker - First Seen Credential | `7 * * * *` | `beelzebub_first_seen_credential` |
 | Beelzebub - Tracker - First Seen Command | `9 * * * *` | `beelzebub_first_seen_command` |
 | Beelzebub - Tracker - First Seen URI | `11 * * * *` | `beelzebub_first_seen_uri` |
 | Beelzebub - Tracker - First Seen User Agent | `13 * * * *` | `beelzebub_first_seen_user_agent` |
-| Beelzebub - Tracker - First Seen Client | `15 * * * *` | `beelzebub_first_seen_client` |
+
+The endpoint tracker keys on `(src_ip, client)` so a known IP switching SSH/TELNET client tool registers as a new endpoint. For non-SSH/TELNET protocols, `client` is empty.
 
 ## KV Store Retention
 
-Six `Beelzebub - Maintenance - Prune First Seen *` saved searches run weekly on Sunday between 03:30 and 03:55, each pruning one collection. Rows whose `first_seen` is older than the `beelzebub_novelty_retention` macro (default `-365d`) are dropped via `inputlookup | where | outputlookup`. An `eventstats` guard aborts the write if the filter would empty the collection, so a misconfigured retention macro is a no-op rather than a data wipe.
+Five `Beelzebub - Maintenance - Prune First Seen *` saved searches run weekly on Sunday between 03:30 and 03:50, each pruning one collection. Rows whose `first_seen` is older than the `beelzebub_novelty_retention` macro (default `-365d`) are dropped via `inputlookup | where | outputlookup`. An `eventstats` guard aborts the write if the filter would empty the collection, so a misconfigured retention macro is a no-op rather than a data wipe.
 
 - **Tune retention**: edit the `beelzebub_novelty_retention` macro definition in `default/macros.conf` (must be a negative offset accepted by `relative_time()`).
 - **Manual one-off prune**: run the relevant `Beelzebub - Maintenance - …` search ad-hoc.

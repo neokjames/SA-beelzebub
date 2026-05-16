@@ -2,7 +2,7 @@
 access = read : [ * ], write : [ admin, power ]
 export = system
 
-[collections/beelzebub_first_seen_src_ip]
+[collections/beelzebub_first_seen_endpoint]
 access = read : [ * ], write : [ admin, power ]
 export = system
 
@@ -22,11 +22,7 @@ export = system
 access = read : [ * ], write : [ admin, power ]
 export = system
 
-[collections/beelzebub_first_seen_client]
-access = read : [ * ], write : [ admin, power ]
-export = system
-
-[transforms/beelzebub_first_seen_src_ip]
+[transforms/beelzebub_first_seen_endpoint]
 access = read : [ * ], write : [ admin, power ]
 export = system
 
@@ -46,6 +42,3 @@ export = system
 access = read : [ * ], write : [ admin, power ]
 export = system
 
-[transforms/beelzebub_first_seen_client]
-access = read : [ * ], write : [ admin, power ]
-export = system
