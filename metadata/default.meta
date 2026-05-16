@@ -1,3 +1,51 @@
 []
 access = read : [ * ], write : [ admin, power ]
 export = system
+
+[collections/beelzebub_first_seen_src_ip]
+access = read : [ * ], write : [ admin, power ]
+export = system
+
+[collections/beelzebub_first_seen_credential]
+access = read : [ * ], write : [ admin, power ]
+export = system
+
+[collections/beelzebub_first_seen_command]
+access = read : [ * ], write : [ admin, power ]
+export = system
+
+[collections/beelzebub_first_seen_uri]
+access = read : [ * ], write : [ admin, power ]
+export = system
+
+[collections/beelzebub_first_seen_user_agent]
+access = read : [ * ], write : [ admin, power ]
+export = system
+
+[collections/beelzebub_first_seen_client]
+access = read : [ * ], write : [ admin, power ]
+export = system
+
+[transforms/beelzebub_first_seen_src_ip]
+access = read : [ * ], write : [ admin, power ]
+export = system
+
+[transforms/beelzebub_first_seen_credential]
+access = read : [ * ], write : [ admin, power ]
+export = system
+
+[transforms/beelzebub_first_seen_command]
+access = read : [ * ], write : [ admin, power ]
+export = system
+
+[transforms/beelzebub_first_seen_uri]
+access = read : [ * ], write : [ admin, power ]
+export = system
+
+[transforms/beelzebub_first_seen_user_agent]
+access = read : [ * ], write : [ admin, power ]
+export = system
+
+[transforms/beelzebub_first_seen_client]
+access = read : [ * ], write : [ admin, power ]
+export = system

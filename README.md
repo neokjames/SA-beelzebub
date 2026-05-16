@@ -6,8 +6,10 @@ Splunk Supporting Add-on providing dashboards and saved searches for the Beelzeb
 
 | File | Purpose |
 |------|---------|
-| `default/macros.conf` | Index macro — update here if your index name is not `honeypot` |
-| `default/savedsearches.conf` | Pre-built reports and alerting rules |
+| `default/macros.conf` | Index macro + novelty retention macro |
+| `default/savedsearches.conf` | Pre-built reports, alerting rules, novelty trackers, and KV maintenance |
+| `default/collections.conf` | KV store collections that persist first-seen state per entity |
+| `default/transforms.conf` | KV store lookup definitions exposing each collection |
 | `default/data/ui/views/beelzebub_overview.xml` | Overview dashboard |
 | `default/data/ui/views/beelzebub_novelty.xml` | Novel activity tracker dashboard |
 
@@ -46,18 +48,18 @@ General-purpose operational view. Filterable by protocol and time range.
 
 ### Beelzebub — Novel Activity Tracker
 
-Surfaces entities appearing for the first time in the selected window by comparing against all prior indexed data. Useful for identifying new attacker tooling, credential lists, and attack patterns.
+Surfaces entities appearing for the first time by querying per-entity KV store collections (`beelzebub_first_seen_*`) populated hourly by the `Beelzebub - Tracker - *` saved searches. The time picker filters by the stored `first_seen` epoch.
 
-| Panel | Description |
-|-------|-------------|
-| KPIs | New IPs, new credential pairs, new interaction commands, new throttled commands, new HTTP URIs |
-| New Attacker IPs | First-seen IPs with protocol and event count |
-| New Credential Pairs | First-seen username/password combinations |
-| New SSH Client Fingerprints | First-seen client version strings |
-| New HTTP URIs | First-seen request paths |
-| New HTTP User Agents | First-seen user agent strings |
-| New Interactive Commands | First-seen commands where LLM responded |
-| New Throttled Commands | First-seen commands that hit the LLM rate limit |
+**The tracker fills organically.** After installation the dashboard is empty until the first hourly tracker run completes (typically within an hour). Subsequent rows accumulate as new entities are observed; existing entities are never re-flagged. To pre-populate from existing history, run each tracker manually once with `dispatch.earliest_time=0`.
+
+| Panel | Source collection |
+|-------|-------------------|
+| New Attacker IPs | `beelzebub_first_seen_src_ip` |
+| New Credential Pairs | `beelzebub_first_seen_credential` |
+| New SSH Client Fingerprints | `beelzebub_first_seen_client` |
+| New HTTP URIs | `beelzebub_first_seen_uri` |
+| New HTTP User Agents | `beelzebub_first_seen_user_agent` |
+| New Interactive Commands | `beelzebub_first_seen_command` |
 
 ## Saved Alerts
 
@@ -75,3 +77,24 @@ Surfaces entities appearing for the first time in the selected window by compari
 | Beelzebub - Protocol Breakdown | Event counts per honeypot protocol (last 24h) |
 | Beelzebub - Top Credentials | Most common username/password pairs (last 24h) |
 | Beelzebub - Commands Issued | Commands run in interactive sessions (last 24h) |
+
+## Scheduled Trackers (KV store population)
+
+Each tracker scans the previous full hour and inserts any previously-unseen entities into its KV store collection. Schedules are staggered to avoid contention.
+
+| Tracker | Schedule | Collection |
+|---------|----------|------------|
+| Beelzebub - Tracker - First Seen src_ip | `5 * * * *` | `beelzebub_first_seen_src_ip` |
+| Beelzebub - Tracker - First Seen Credential | `7 * * * *` | `beelzebub_first_seen_credential` |
+| Beelzebub - Tracker - First Seen Command | `9 * * * *` | `beelzebub_first_seen_command` |
+| Beelzebub - Tracker - First Seen URI | `11 * * * *` | `beelzebub_first_seen_uri` |
+| Beelzebub - Tracker - First Seen User Agent | `13 * * * *` | `beelzebub_first_seen_user_agent` |
+| Beelzebub - Tracker - First Seen Client | `15 * * * *` | `beelzebub_first_seen_client` |
+
+## KV Store Retention
+
+Six `Beelzebub - Maintenance - Prune First Seen *` saved searches run weekly on Sunday between 03:30 and 03:55, each pruning one collection. Rows whose `first_seen` is older than the `beelzebub_novelty_retention` macro (default `-365d`) are dropped via `inputlookup | where | outputlookup`. An `eventstats` guard aborts the write if the filter would empty the collection, so a misconfigured retention macro is a no-op rather than a data wipe.
+
+- **Tune retention**: edit the `beelzebub_novelty_retention` macro definition in `default/macros.conf` (must be a negative offset accepted by `relative_time()`).
+- **Manual one-off prune**: run the relevant `Beelzebub - Maintenance - …` search ad-hoc.
+- **Full reset of a collection**: `| makeresults | head 0 | outputlookup beelzebub_first_seen_<entity>`. Use with care; trackers will re-populate as new entities arrive.
