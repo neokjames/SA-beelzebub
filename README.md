@@ -54,7 +54,7 @@ Surfaces entities appearing for the first time by querying per-entity KV store c
 
 | Panel | Source collection |
 |-------|-------------------|
-| New Endpoints (src_ip + client) | `beelzebub_first_seen_endpoint` |
+| New Sources (src_ip + client) | `beelzebub_first_seen_source` |
 | New Credential Pairs | `beelzebub_first_seen_credential` |
 | New HTTP URIs | `beelzebub_first_seen_uri` |
 | New HTTP User Agents | `beelzebub_first_seen_user_agent` |
@@ -83,13 +83,13 @@ Each tracker scans the previous full hour and inserts any previously-unseen enti
 
 | Tracker | Schedule | Collection |
 |---------|----------|------------|
-| Beelzebub - Tracker - First Seen Endpoint | `5 * * * *` | `beelzebub_first_seen_endpoint` |
+| Beelzebub - Tracker - First Seen Source | `5 * * * *` | `beelzebub_first_seen_source` |
 | Beelzebub - Tracker - First Seen Credential | `7 * * * *` | `beelzebub_first_seen_credential` |
 | Beelzebub - Tracker - First Seen Command | `9 * * * *` | `beelzebub_first_seen_command` |
 | Beelzebub - Tracker - First Seen URI | `11 * * * *` | `beelzebub_first_seen_uri` |
 | Beelzebub - Tracker - First Seen User Agent | `13 * * * *` | `beelzebub_first_seen_user_agent` |
 
-The endpoint tracker keys on `(src_ip, client)` so a known IP switching SSH/TELNET client tool registers as a new endpoint. For non-SSH/TELNET protocols, `client` is empty.
+The source tracker keys on `(src_ip, client)` so a known IP switching SSH/TELNET client tool registers as a new source. For non-SSH/TELNET protocols, `client` is empty.
 
 ## KV Store Retention
 

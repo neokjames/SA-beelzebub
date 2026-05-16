@@ -25,9 +25,9 @@
   <row>
     <panel>
       <single>
-        <title>New Endpoints (src_ip + client)</title>
+        <title>New Sources (src_ip + client)</title>
         <search>
-          <query>| inputlookup beelzebub_first_seen_endpoint
+          <query>| inputlookup beelzebub_first_seen_source
 | eval _earliest = if(match("$time_range.earliest$","^-?\d+(\.\d+)?$"), tonumber("$time_range.earliest$"), relative_time(now(), "$time_range.earliest$"))
 | eval _latest   = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$","^-?\d+(\.\d+)?$"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
@@ -83,13 +83,13 @@
     </panel>
   </row>
 
-  <!-- ── Row 2: New Endpoints (src_ip + client) ─────────────────────────── -->
+  <!-- ── Row 2: New Sources (src_ip + client) ─────────────────────────── -->
   <row>
     <panel>
       <table>
-        <title>New Endpoints (src_ip + client)</title>
+        <title>New Sources (src_ip + client)</title>
         <search>
-          <query>| inputlookup beelzebub_first_seen_endpoint
+          <query>| inputlookup beelzebub_first_seen_source
 | eval _earliest = if(match("$time_range.earliest$","^-?\d+(\.\d+)?$"), tonumber("$time_range.earliest$"), relative_time(now(), "$time_range.earliest$"))
 | eval _latest   = if("$time_range.latest$"="now", now(), if(match("$time_range.latest$","^-?\d+(\.\d+)?$"), tonumber("$time_range.latest$"), relative_time(now(), "$time_range.latest$")))
 | where first_seen &gt;= _earliest AND first_seen &lt;= _latest
